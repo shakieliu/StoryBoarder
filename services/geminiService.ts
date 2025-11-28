@@ -2,7 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Scene } from "../types";
 
 const getClient = () => {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+    return new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY });
 }
 
 export const breakdownStory = async (storyText: string): Promise<Scene[]> => {
