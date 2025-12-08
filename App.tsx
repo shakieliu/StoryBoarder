@@ -102,14 +102,11 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (_event === 'SIGNED_IN') {
-        // If user was on auth page, move them to returnTo or Home
-        if (step === 'auth') {
-             // Effect hook below will handle redirection based on session update
-        }
+        // We let the useEffect below handle the redirect based on returnTo
       }
       if (_event === 'SIGNED_OUT') {
         setStep('hero');
-        handleResetApp();
+        resetState();
       }
     });
 
@@ -132,12 +129,13 @@ export default function App() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    handleResetApp();
+    resetState();
     setStep('hero');
   };
 
-  const handleResetApp = () => {
-    setCharacter({ description: '' });
+  // Fresh Start Logic
+  const resetState = () => {
+    setCharacter({ description: '', mode: undefined, imageBase64: null, previewUrl: null });
     setRawStory('');
     setScenes([]);
     setSelectedStyle('');
@@ -146,13 +144,21 @@ export default function App() {
     setErrorMsg('');
   };
 
+  // "Start Creating" Button Logic
   const handleStart = () => {
+    resetState(); // Fresh start required
     if (session) {
       setStep('character');
     } else {
       setReturnTo('character');
       setStep('auth');
     }
+  };
+
+  // Logo Click Logic
+  const handleLogoClick = () => {
+    resetState(); // Fresh start required
+    setStep('hero');
   };
 
   const navigateToAuth = () => {
@@ -737,7 +743,10 @@ export default function App() {
     <Gallery 
       userId={session?.user.id || ''} 
       onBack={() => setStep('hero')}
-      onCreate={() => setStep('character')}
+      onCreate={() => {
+        resetState();
+        setStep('character');
+      }}
     />
   );
 
@@ -748,22 +757,19 @@ export default function App() {
       case 'auth':
         return <Auth />;
       case 'gallery':
-        // Protected
+        // Protected Route
         if (!session) {
-          setReturnTo('gallery');
-          setStep('auth');
-          return null;
+          // If we are somehow here without session, redirect to auth
+          return <Auth />;
         }
         return renderGalleryView();
       case 'character':
       case 'story':
       case 'style':
       case 'result':
-        // Protected Generator Steps
+        // Protected Generator Routes
         if (!session) {
-          setReturnTo('character');
-          setStep('auth');
-          return null;
+          return <Auth />;
         }
         if (step === 'character') return renderCharacterView();
         if (step === 'story') return renderStoryView();
@@ -775,7 +781,10 @@ export default function App() {
             onRegenerate={(id) => handleRegenerateSingle(scenes.findIndex(s => s.id === id))}
             onRegenerateAll={handleGenerate}
             onDownloadAll={handleDownloadAll}
-            onReset={handleResetApp}
+            onReset={() => {
+                resetState();
+                setStep('hero');
+            }}
             onBack={() => {
               setScenes(prev => prev.map(s => ({ ...s, imageUrl: undefined, isGenerating: false, error: null })));
               setStep('style');
@@ -802,7 +811,7 @@ export default function App() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setStep('hero')}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={handleLogoClick}>
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-bold text-xl">S</div>
             <span className="font-bold text-lg tracking-tight">StoryBoarder</span>
           </div>
