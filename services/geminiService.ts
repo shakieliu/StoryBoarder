@@ -1,13 +1,14 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import { Scene } from "../types";
 
 const getClient = () => {
-    // ✅ 上线标准版：
-    // 1. 必须用 import.meta.env
-    // 2. 变量名必须对应 Vercel 里设置的 VITE_GOOGLE_API_KEY
+    // ✅ 上线修正版：
+    // 1. 使用 import.meta.env (Vite 标准)
+    // 2. 变量名必须叫 VITE_GOOGLE_API_KEY (对应我们在 Vercel 填的新变量)
     const apiKey = import.meta.env.VITE_GOOGLE_API_KEY;
     
     if (!apiKey) {
-        console.error("Missing Google API Key. Check Vercel Environment Variables.");
+        console.error("API Key missing! Make sure VITE_GOOGLE_API_KEY is set in Vercel.");
         throw new Error("Google API Key not found");
     }
     
